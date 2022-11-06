@@ -5,6 +5,8 @@ import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+import User from './User';
+import { IMongoDBUser } from './types';
 
 dotenv.config();
 
@@ -27,12 +29,18 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.serializeUser((user: any, done) => {
-	return done(null, user);
+// Login with Google
+// Create a user in MongoDB
+// Serialize & Deserialize -> Grab the user from the database and return him
+
+passport.serializeUser((user: IMongoDBUser, done) => {
+	return done(null, user._id);
 });
 
-passport.deserializeUser((user: any, done) => {
-	return done(null, user);
+passport.deserializeUser((id: string, done) => {
+	User.findById(id, (err: Error, doc: IMongoDBUser) => {
+		return done(null, doc);
+	});
 });
 
 passport.use(
@@ -44,9 +52,26 @@ passport.use(
 		},
 		function (accessToken: any, refreshToken: any, profile: any, cb: any) {
 			// Called on Successful Authentication!
+			// console.log(profile);
 			// Insert into Database
-			console.log(profile);
-			cb(null, profile);
+			User.findOne(
+				{ googleId: profile.id },
+				async (err: Error, doc: IMongoDBUser) => {
+					if (err) return cb(err, null);
+
+					if (!doc) {
+						// Create new user
+						const newUser = new User({
+							googleId: profile.id,
+							username: profile.name.givenName,
+						});
+
+						await newUser.save();
+						cb(null, newUser);
+					}
+					cb(null, doc);
+				}
+			);
 		}
 	)
 );
@@ -72,6 +97,13 @@ app.get(
 		res.redirect('http://localhost:3000');
 	}
 );
+
+app.get('/auth/logout', (req, res) => {
+	if (req.user) {
+		req.logout((err: Error) => console.log(err));
+		res.send('success');
+	}
+});
 
 app.listen(4000, () => {
 	console.log('Server started');
