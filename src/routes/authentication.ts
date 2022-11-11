@@ -1,12 +1,13 @@
 import express, { urlencoded } from 'express';
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const passportLocal = require('passport-local').Strategy;
+const LocalStrategy = require('passport-local').Strategy;
 import cookieParser from 'cookie-parser';
 import bcrypt from 'bcryptjs';
 import bodyParser from 'body-parser';
 import passport from 'passport';
-import User from '../User';
-import { IMongoDBUser } from '../types';
+import User from '../models/User';
+import { IMongoDBUser } from '../types/types';
+import { Document } from 'mongoose';
 
 const router = express.Router();
 
@@ -16,10 +17,10 @@ router.use(urlencoded({ extended: true }));
 router.use(cookieParser('secretcode'));
 
 // Login with Google
-// Create a user in MongoDB
-// Serialize & Deserialize -> Grab the user from the database and return him
-passport.serializeUser((user: IMongoDBUser, done) => {
-	return done(null, user._id);
+// Create a doc in MongoDB
+// Serialize & Deserialize -> Grab the doc from the database and return him
+passport.serializeUser((doc: IMongoDBUser, done) => {
+	return done(null, doc._id);
 });
 
 passport.deserializeUser((id: string, done) => {
@@ -28,6 +29,31 @@ passport.deserializeUser((id: string, done) => {
 	});
 });
 
+// difining Local Strategy
+passport.use(
+	new LocalStrategy(
+		{ usernameField: 'email' },
+		(email: string, password: string, done: any) => {
+			console.log(email);
+			console.log(password);
+			User.findOne({ email: email }, async (err: Error, doc: IMongoDBUser) => {
+				console.log(doc);
+				if (err) throw err;
+				if (!doc) return done(null, false);
+				bcrypt.compare(password, doc.password, (err, result) => {
+					if (err) throw err;
+					if (result === true) {
+						return done(null, doc);
+					} else {
+						return done(null, false);
+					}
+				});
+			});
+		}
+	)
+);
+
+// defining Google Strategy
 passport.use(
 	new GoogleStrategy(
 		{
@@ -35,8 +61,8 @@ passport.use(
 			clientSecret: `${process.env.GOOGLE_CLIENT_SECRET}`,
 			callbackURL: '/auth/google/callback',
 		},
-		function (accessToken: any, refreshToken: any, profile: any, cb: any) {
-			// Called on Successful Authentication!
+		(accessToken: any, refreshToken: any, profile: any, cb: any) => {
+			// Called on Successful Authentication
 			// console.log(profile);
 			// Insert into Database
 			User.findOne(
@@ -45,7 +71,7 @@ passport.use(
 					if (err) return cb(err, null);
 
 					if (!doc) {
-						// Create new user
+						// Create new doc
 						const newUser = new User({
 							googleId: profile.id,
 							username: profile.name.givenName,
@@ -61,6 +87,7 @@ passport.use(
 	)
 );
 
+// Google endpoints
 router.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
 router.get(
@@ -72,6 +99,32 @@ router.get(
 	}
 );
 
+// Local endpoints
+router.post('/local/login', passport.authenticate('local'), (req, res) => {
+	console.log('Logged In');
+	res.send('Successful Login');
+});
+
+router.post('/local/register', async (req, res) => {
+	console.log(req.body);
+	User.findOne({ email: req.body.email }, async (err: Error, doc: Document) => {
+		if (err) throw err;
+		if (doc) res.send('User with this Email already exists');
+		if (!doc) {
+			const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+			const newUser = new User({
+				email: req.body.email,
+				username: req.body.username,
+				password: hashedPassword,
+			});
+			await newUser.save();
+			res.send('User Created');
+		}
+	});
+});
+
+// Logout function
 router.get('/logout', (req, res) => {
 	// console.log(req);
 	if (req.user) {

@@ -36,6 +36,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/getuser', (req, res) => {
+	// console.log(req);
 	res.send(req.user);
 });
 

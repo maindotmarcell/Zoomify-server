@@ -10,6 +10,7 @@ const user = new mongoose.Schema({
 		required: true,
 		type: String,
 	},
+	password: { required: false, type: String },
 });
 
 export default mongoose.model('User', user);
