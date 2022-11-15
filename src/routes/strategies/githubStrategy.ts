@@ -1,33 +1,31 @@
 import express from 'express';
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+var GitHubStrategy = require('passport-github').Strategy;
 import passport from 'passport';
 import User from '../../models/User';
 import { IMongoDBUser } from '../../types/types';
 
 const router = express.Router();
 
-// defining Google Strategy
 passport.use(
-	new GoogleStrategy(
+	new GitHubStrategy(
 		{
-			clientID: `${process.env.GOOGLE_CLIENT_ID}`,
-			clientSecret: `${process.env.GOOGLE_CLIENT_SECRET}`,
-			callbackURL: '/auth/google/callback',
+			clientID: `${process.env.GITHUB_CLIENT_ID}`,
+			clientSecret: `${process.env.GITHUB_CLIENT_SECRET}`,
+			callbackURL: '/auth/github/callback',
 		},
 		(accessToken: any, refreshToken: any, profile: any, cb: any) => {
-			// Called on Successful Authentication
-			// console.log(profile);
-			// Insert into Database
+			// console.log('profile: ', profile);
 			User.findOne(
-				{ googleId: profile.id },
+				{ githubId: profile.id },
 				async (err: Error, doc: IMongoDBUser) => {
+					// console.log(doc);
 					if (err) return cb(err, null);
 
 					if (!doc) {
 						// Create new doc
 						const newUser = new User({
-							googleId: profile.id,
-							username: profile.name.givenName,
+							githubId: profile.id,
+							username: profile.username,
 						});
 
 						await newUser.save();
@@ -40,12 +38,11 @@ passport.use(
 	)
 );
 
-// Google endpoints
-router.get('/', passport.authenticate('google', { scope: ['profile'] }));
+router.get('/', passport.authenticate('github'));
 
 router.get(
 	'/callback',
-	passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login' }),
+	passport.authenticate('github', { failureRedirect: 'http://localhost:3000/login' }),
 	function (req, res) {
 		// Successful authentication, redirect home.
 		res.redirect('http://localhost:3000');

@@ -4,6 +4,7 @@ import User from '../models/User';
 import { IMongoDBUser } from '../types/types';
 import googleRoute from './strategies/googleStrategy';
 import localRoute from './strategies/localStrategy';
+import githubRoute from './strategies/githubStrategy';
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ passport.deserializeUser((id: string, done) => {
 // Auth strategy routes
 router.use('/local', localRoute);
 router.use('/google', googleRoute);
+router.use('/github', githubRoute);
 
 // Logout function
 router.get('/logout', (req, res) => {
