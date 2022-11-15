@@ -42,10 +42,10 @@ router.get('/', passport.authenticate('github'));
 
 router.get(
 	'/callback',
-	passport.authenticate('github', { failureRedirect: 'http://localhost:3000/login' }),
+	passport.authenticate('github', { failureRedirect: `${process.env.CLIENT_URL}/login` }),
 	function (req, res) {
 		// Successful authentication, redirect home.
-		res.redirect('http://localhost:3000');
+		res.redirect(`${process.env.CLIENT_URL}`);
 	}
 );
 

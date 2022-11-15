@@ -2,6 +2,7 @@ import express from 'express';
 import passport from 'passport';
 import User from '../models/User';
 import { IMongoDBUser } from '../types/types';
+// route imports
 import googleRoute from './strategies/googleStrategy';
 import localRoute from './strategies/localStrategy';
 import githubRoute from './strategies/githubStrategy';
@@ -33,4 +34,4 @@ router.get('/logout', (req, res) => {
 	}
 });
 
-module.exports = router;
+export default router;

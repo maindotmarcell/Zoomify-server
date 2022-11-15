@@ -10,7 +10,8 @@ dotenv.config();
 const app = express();
 
 // Route imports
-const authRoute = require('./routes/authentication');
+import authRoute from './routes/auth';
+
 
 mongoose.connect(
 	`${process.env.START_MONGODB}${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}${process.env.END_MONGODB}`,
@@ -22,7 +23,7 @@ mongoose.connect(
 
 // Middleware
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: `${process.env.CLIENT_URL}`, credentials: true }));
 app.use(
 	session({ secret: 'secretcode', resave: true, saveUninitialized: true })
 );

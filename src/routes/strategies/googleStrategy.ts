@@ -45,10 +45,12 @@ router.get('/', passport.authenticate('google', { scope: ['profile'] }));
 
 router.get(
 	'/callback',
-	passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login' }),
+	passport.authenticate('google', {
+		failureRedirect: `${process.env.CLIENT_URL}/login`,
+	}),
 	function (req, res) {
 		// Successful authentication, redirect home.
-		res.redirect('http://localhost:3000');
+		res.redirect(`${process.env.CLIENT_URL}`);
 	}
 );
 
