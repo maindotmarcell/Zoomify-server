@@ -47,24 +47,31 @@ router.post('/login', passport.authenticate('local'), (req, res) => {
 
 router.post('/register', async (req, res, next) => {
 	console.log(req.body);
-	User.findOne({ email: req.body.email }, async (err: Error, doc: Document) => {
-		if (err) throw err;
-		if (doc) res.send('User with this Email already exists');
-		if (!doc) {
-			const hashedPassword = await bcrypt.hash(req.body.password, 10);
+	try {
+		User.findOne(
+			{ email: req.body.email },
+			async (err: Error, doc: Document) => {
+				if (err) throw err;
+				if (doc) res.send('User with this Email already exists');
+				if (!doc) {
+					const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-			const newUser = await User.create({
-				email: req.body.email,
-				username: req.body.username,
-				password: hashedPassword,
-			});
+					const newUser = await User.create({
+						email: req.body.email,
+						username: req.body.username,
+						password: hashedPassword,
+					});
 
-			req.login(newUser, function (err) {
-				if (err) return next(err);
-				res.send('User Created');
-			});
-		}
-	});
+					req.login(newUser, function (err) {
+						if (err) return next(err);
+						res.send('User Created');
+					});
+				}
+			}
+		);
+	} catch (err) {
+		res.send('Invalid Credentials');
+	}
 });
 
 export default router;
