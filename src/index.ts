@@ -4,10 +4,10 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
-const app = express();
 import http from 'http';
+const app = express();
 const server = http.createServer(app);
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 dotenv.config();
 
@@ -38,23 +38,26 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// routing for authentication
 app.use('/auth', authRoute);
 
+// route to get current authenticated user (might move this into auth route later)
 app.get('/getuser', (req, res) => {
 	// console.log(req);
 	res.send(req.user);
 });
 
-io.on('connection', (socket) => {
-	socket.emit('me', socket.id);
-	console.log(socket.id);
+// ---------- socket.io code for vid chat below ---------------
+io.on('connection', (socket: Socket) => { // <= As the client emits a 'connection' event to the server
+	socket.emit('me', socket.id); // <= Emit a 'me' event containing the socket id of the connected client
+	console.log("🚀 ~ file: index.ts:53 ~ io.on ~ socket.id", socket.id)
 
-	socket.on('disconnet', () => {
-		socket.broadcast.emit('callEnded');
+	socket.on('disconnect', () => {
+		socket.broadcast.emit('callEnded'); // <= Emit message to all connected sockets to signal call ended
 	});
 
-	socket.on('callUser', (data) => {
-		io.to(data.userToCall).emit('callUser', {
+	socket.on('callUser', (data) => { // <= Forward call user event from caller to user to be called
+		io.to(data.userToCall).emit('callUser', { // <= Emit to user to be called
 			signal: data.signalData,
 			from: data.from,
 			name: data.name,
