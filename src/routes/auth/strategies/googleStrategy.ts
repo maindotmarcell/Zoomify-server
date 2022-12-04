@@ -1,8 +1,8 @@
 import express from 'express';
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 import passport from 'passport';
-import User from '../../models/User';
-import { IMongoDBUser } from '../../types/types';
+import User from '../../../models/User';
+import { IMongoDBUser } from '../../../types/types';
 
 const router = express.Router();
 

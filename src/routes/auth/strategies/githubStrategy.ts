@@ -1,8 +1,8 @@
 import express from 'express';
 var GitHubStrategy = require('passport-github').Strategy;
 import passport from 'passport';
-import User from '../../models/User';
-import { IMongoDBUser } from '../../types/types';
+import User from '../../../models/User';
+import { IMongoDBUser } from '../../../types/types';
 
 const router = express.Router();
 
@@ -42,7 +42,9 @@ router.get('/', passport.authenticate('github'));
 
 router.get(
 	'/callback',
-	passport.authenticate('github', { failureRedirect: `${process.env.CLIENT_URL}/login` }),
+	passport.authenticate('github', {
+		failureRedirect: `${process.env.CLIENT_URL}/login`,
+	}),
 	function (req, res) {
 		// Successful authentication, redirect home.
 		res.redirect(`${process.env.CLIENT_URL}`);

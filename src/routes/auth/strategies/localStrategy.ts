@@ -4,8 +4,8 @@ import bodyParser from 'body-parser';
 const LocalStrategy = require('passport-local').Strategy;
 import bcrypt from 'bcryptjs';
 import passport from 'passport';
-import User from '../../models/User';
-import { IMongoDBUser } from '../../types/types';
+import User from '../../../models/User';
+import { IMongoDBUser } from '../../../types/types';
 import { Document } from 'mongoose';
 
 const router = express.Router();
