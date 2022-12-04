@@ -48,22 +48,27 @@ app.get('/getuser', (req, res) => {
 });
 
 // ---------- socket.io code for vid chat below ---------------
-io.on('connection', (socket: Socket) => { // <= As the client emits a 'connection' event to the server
-	socket.emit('me', socket.id); // <= Emit a 'me' event containing the socket id of the connected client
-	console.log("🚀 ~ file: index.ts:53 ~ io.on ~ socket.id", socket.id)
+// As the client emits a 'connection' event to the server
+io.on('connection', (socket: Socket) => {
+	socket.emit('me', socket.id);
+	console.log('🚀 ~ file: index.ts:53 ~ io.on ~ socket.id', socket.id);
 
 	socket.on('disconnect', () => {
-		socket.broadcast.emit('callEnded'); // <= Emit message to all connected sockets to signal call ended
+		socket.broadcast.emit('userLeft');
+		// (Broadcast = Emit message to all connected sockets, except sender, that a user left)
 	});
 
-	socket.on('callUser', (data) => { // <= Forward call user event from caller to user to be called
-		io.to(data.userToCall).emit('callUser', { // <= Emit to user to be called
+	socket.on('callUser', (data) => {
+		// Forward call user event from caller to user to be called
+		io.to(data.userToCall).emit('callUser', {
+			// Emit to user to be called
 			signal: data.signalData,
 			from: data.from,
 			name: data.name,
 		});
 	});
 
+	// forward answered call back to caller to create p2p connection
 	socket.on('answerCall', (data) => {
 		io.to(data.to).emit('callAccepted', data.signal);
 	});
