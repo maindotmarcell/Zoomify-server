@@ -25,6 +25,11 @@ router.use('/local', localRoute);
 router.use('/google', googleRoute);
 router.use('/github', githubRoute);
 
+// route to get current authenticated user
+router.get('/getuser', (req, res) => {
+	res.send(req.user);
+});
+
 // Logout function
 router.get('/logout', (req, res) => {
 	// console.log(req);

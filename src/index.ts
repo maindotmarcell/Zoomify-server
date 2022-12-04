@@ -11,7 +11,7 @@ import { Server, Socket } from 'socket.io';
 
 dotenv.config();
 
-const io = new Server(server, {
+export const io = new Server(server, {
 	cors: {
 		origin: `${process.env.CLIENT_URL}`,
 		methods: ['GET', 'POST'],
@@ -41,11 +41,6 @@ app.use(passport.session());
 // routing for authentication
 app.use('/auth', authRoute);
 
-// route to get current authenticated user (might move this into auth route later)
-app.get('/getuser', (req, res) => {
-	// console.log(req);
-	res.send(req.user);
-});
 
 // ---------- socket.io code for vid chat below ---------------
 // As the client emits a 'connection' event to the server
