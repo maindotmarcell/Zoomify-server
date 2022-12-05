@@ -28,7 +28,7 @@ export const socketConnectionHandler = (socket: Socket) => {
 
 	// forward answered call back to caller to create p2p connection
 	socket.on('answerCall', (data) => {
-		io.to(data.to).emit('callAccepted', data.signal);
+		io.to(data.to).emit('callAccepted', data);
 	});
 
 	socket.on('declineCall', (data) => {
