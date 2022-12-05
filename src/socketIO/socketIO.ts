@@ -1,6 +1,6 @@
 // socket.io code for vid chat
 import { Socket } from 'socket.io';
-import {io} from '../index'
+import { io } from '../index';
 
 // As the client emits a 'connection' event to the server
 export const socketConnectionHandler = (socket: Socket) => {
@@ -8,13 +8,13 @@ export const socketConnectionHandler = (socket: Socket) => {
 	console.log('🚀 ~ file: index.ts:53 ~ io.on ~ socket.id', socket.id);
 
 	socket.on('disconnect', () => {
-		socket.broadcast.emit('userLeft');
+		socket.broadcast.emit('userLeft', { disconnectedUser: socket.id });
 		// (Broadcast = Emit message to all connected sockets, except sender, that a user left)
 	});
 
-	socket.on('endCall', () => {
-		socket.broadcast.emit('userLeft');
-	})
+	// socket.on('endCall', () => {
+	// 	socket.broadcast.emit('userLeft');
+	// });
 
 	socket.on('callUser', (data) => {
 		// Forward call user event from caller to user to be called
@@ -31,4 +31,7 @@ export const socketConnectionHandler = (socket: Socket) => {
 		io.to(data.to).emit('callAccepted', data.signal);
 	});
 
-}
+	socket.on('declineCall', (data) => {
+		io.to(data.to).emit('callDeclined');
+	});
+};
