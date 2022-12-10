@@ -9,16 +9,6 @@ import githubRoute from './strategies/githubStrategy';
 
 const router = express.Router();
 
-// Serialize & Deserialize -> Grab the doc from the database and return it
-passport.serializeUser((doc: IMongoDBUser, done) => {
-	return done(null, doc._id);
-});
-
-passport.deserializeUser((id: string, done) => {
-	User.findById(id, (err: Error, doc: IMongoDBUser) => {
-		return done(null, doc);
-	});
-});
 
 // Auth strategy routes
 router.use('/local', localRoute);

@@ -12,6 +12,9 @@ dotenv.config();
 
 // Route imports
 import authRoute from './routes/auth/auth';
+import accountRoute from './routes/account/account';
+import { IMongoDBUser } from './types/types';
+import User from './models/User';
 
 const app = express();
 const server = http.createServer(app);
@@ -46,8 +49,20 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Serialize & Deserialize -> Grab the doc from the database and return it
+passport.serializeUser((doc: IMongoDBUser, done) => {
+	return done(null, doc._id);
+});
+
+passport.deserializeUser((id: string, done) => {
+	User.findById(id, (err: Error, doc: IMongoDBUser) => {
+		return done(null, doc);
+	});
+});
+
 // Routing for authentication
 app.use('/auth', authRoute);
+app.use('/account', accountRoute);
 
 server.listen(4000, () => {
 	console.log('Server started');
