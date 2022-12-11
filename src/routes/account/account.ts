@@ -31,17 +31,16 @@ router.put('/updatePassword', async (req: Request, res: Response) => {
 			return res.status(401).send('Unauthorized: user not authenticated.');
 
 		// checking current password input
-		// this method doesn't work, will probs need to use the bcrypt.compare() function
-		const hashedPassword = await bcrypt.hash(req.body.password, 10);
 		const hashedNewPassword = await bcrypt.hash(req.body.newPassword, 10);
 		const user = await User.findById(req.body.id);
-
-		if (hashedPassword !== user.password)
-			return res.status(200).send('Incorrect password.');
-
-		// updating the password
-		await user.update({ password: hashedNewPassword });
-		return res.status(200).send('Password updated.');
+		bcrypt.compare(req.body.password, user.password, async (err, success) => {
+			if (err) throw err;
+			if (!success)
+				return res.status(401).send('Unauthorized: password is incorrect.');
+			// updating the password
+			await user.update({ password: hashedNewPassword });
+			return res.status(200).send('Password updated.');
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).send('Server error.');
@@ -49,8 +48,23 @@ router.put('/updatePassword', async (req: Request, res: Response) => {
 });
 
 router.delete('/deleteAccount', async (req: Request, res: Response) => {
-	console.log(req);
-	res.status(200).json({ deleted: true });
+	try {
+		if (!req.isAuthenticated())
+			return res.status(401).send('Unauthorized: user not authenticated.');
+
+		// checking current password input
+		const user = await User.findById(req.body.id);
+		bcrypt.compare(req.body.password, user.password, (err, success) => {
+			if (err) throw err;
+			if (!success)
+				return res.status(401).send('Unauthorized: password is incorrect.');
+		});
+		await user.delete();
+		res.status(200).send('Account deleted.');
+	} catch (error) {
+		console.log(error);
+		return res.status(500).send('Server error.');
+	}
 });
 
 export default router;
