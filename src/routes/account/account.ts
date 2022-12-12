@@ -22,6 +22,7 @@ router.put('/updateUsername', async (req: Request, res: Response) => {
 		);
 	} catch (error) {
 		console.log(error);
+		return res.status(500).send('Server error.');
 	}
 });
 
@@ -33,10 +34,12 @@ router.put('/updatePassword', async (req: Request, res: Response) => {
 		// checking current password input
 		const hashedNewPassword = await bcrypt.hash(req.body.newPassword, 10);
 		const user = await User.findById(req.body.id);
+
 		bcrypt.compare(req.body.password, user.password, async (err, success) => {
 			if (err) throw err;
 			if (!success)
 				return res.status(401).send('Unauthorized: password is incorrect.');
+
 			// updating the password
 			await user.update({ password: hashedNewPassword });
 			return res.status(200).send('Password updated.');
@@ -47,20 +50,15 @@ router.put('/updatePassword', async (req: Request, res: Response) => {
 	}
 });
 
-router.delete('/deleteAccount', async (req: Request, res: Response) => {
+router.delete('/delete-account', async (req: Request, res: Response) => {
 	try {
 		if (!req.isAuthenticated())
 			return res.status(401).send('Unauthorized: user not authenticated.');
 
-		// checking current password input
-		const user = await User.findById(req.body.id);
-		bcrypt.compare(req.body.password, user.password, (err, success) => {
-			if (err) throw err;
-			if (!success)
-				return res.status(401).send('Unauthorized: password is incorrect.');
-		});
-		await user.delete();
-		res.status(200).send('Account deleted.');
+		await User.findByIdAndRemove(req.body.id);
+
+		req.logout((err: Error) => console.log(err));
+		return res.status(200).send('Account deleted.');
 	} catch (error) {
 		console.log(error);
 		return res.status(500).send('Server error.');
